@@ -7,6 +7,8 @@ defmodule Identicon do
     |>build_grid
     |>filter_odd_squares
     |>build_pixel_map
+    |>draw_image
+    |>save_image(input)
   end
 
   #generates a ash value using the input string
@@ -80,4 +82,25 @@ defmodule Identicon do
     %Identicon.Image{image | pixel_map: pixel_map}
   end
 
+  # creates a image using the :egd library of erlang
+  def draw_image(%Identicon.Image{color: color, pixel_map: pixel_map}) do
+
+    #creating a canvas of (250px,250px)
+    image = :egd.create(250, 250)
+    #creating the fill variable with the RGB values
+    fill = :egd.color(color)
+
+    #filling each square of the pixel_map, according to its coordinates, with the fill variable
+    Enum.each(pixel_map, fn({start, stop}) ->
+      :egd.filledRectangle(image, start, stop, fill)
+    end)
+
+    #rendering the image into a binary file
+    :egd.render(image)
+  end
+
+  #saving the image in .png format in the device
+  def save_image(image, filename) do
+    File.write("#{filename}.png", image)
+  end
 end
