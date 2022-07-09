@@ -5,6 +5,8 @@ defmodule Identicon do
     |>hash_input
     |>pick_color
     |>build_grid
+    |>filter_odd_squares
+    |>build_pixel_map
   end
 
   #generates a ash value using the input string
@@ -47,6 +49,35 @@ defmodule Identicon do
   #takes a row of the hex grid and mirrors it
   def mirror_row([first, second | _tail] = row) do
     row ++ [second, first]
+  end
+
+  #takes the grid and removes all the squares that have an odd grid value
+  def filter_odd_squares(%Identicon.Image{grid: grid} = image) do
+    #takes the grid and removes the tuples that have an odd value
+    grid = Enum.filter(grid, fn({value, _index}) -> rem(value,2) == 0 end)
+
+    #updating the image struct
+    %Identicon.Image{image | grid: grid}
+  end
+
+  # creates a grid of x and y axes denoting the starting and ending point of each square to be colored in the identicon
+  def build_pixel_map(%Identicon.Image{grid: grid} = image) do
+    pixel_map = Enum.map(grid, fn({_value, index}) ->
+
+      # calculating the x and y coordinates for each tuple (denoting squares)
+      horizontal = rem(index,5)*50
+      vertical = div(index,5)*50
+
+      top_left = {horizontal, vertical}
+      bottom_right = {horizontal+50, vertical+50}
+
+      # tuples denoting the starting and ending coordinates for each square
+      {top_left, bottom_right}
+    end
+    )
+
+    # adding the pixel_map property to the struct
+    %Identicon.Image{image | pixel_map: pixel_map}
   end
 
 end
